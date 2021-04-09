@@ -1,5 +1,9 @@
 #include <Keypad.h> 
 
+void(* resetFunc) (void) = 0; //계산기 초기화 함수
+
+
+
 const byte ROWS = 4; //four rows 
 const byte COLS = 4; //four columns 
  
@@ -12,7 +16,8 @@ char keys[ROWS][COLS] = {
   {'7','8','9', '-'}, 
   {'C','0','=', '+'} 
 }; 
-char key;
+char key, key2; //input1, 2에서 사용되는 key변수
+
  
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS ); 
 //keypad 입력 코드
@@ -39,45 +44,61 @@ double result=0; //첫 번째 숫자, 연산 부호 후 두 번째 숫자, 결�
 char sign; //연산기호
 
 int input1(){
+  Serial.println("input1 start");
   while(1){
     key = keypad.getKey();
+    if(key == 'C'){
+    Serial.println("C");
+    delay(10);
+    resetFunc();
+    }
     if(key >= '0' && key <= '9'){
       firstResult=(firstResult*10)+(key-'0');
       //연산된 값을 7-segment에 표현하는 과정을 진행하지 못함
-      
+      Serial.println(key);
     }
     else if (key=='/') break;
     else if (key=='*') break;
     else if (key=='-') break;
     else if (key=='+') break;
   }
+  Serial.println(firstResult);
   return firstResult;
   
 }
 int input2(){
+  Serial.println("input2 start");
   while (1){
-    key = keypad.getKey();
-    if(key >= '0' && key <= '9'){
-      secondResult=(firstResult*10)+(key-'0');
-      //연산된 값을 7-segment에 표현하는 과정을 진행하지 못함
-      
+    key2 = keypad.getKey();
+    if(key2 == 'C'){
+    Serial.println("C");
+    resetFunc();
     }
-    if (key=='/'){
+    if(key2 >= '0' && key2 <= '9'){
+      secondResult=(secondResult*10)+(key2-'0');
+      //연산된 값을 7-segment에 표현하는 과정을 진행하지 못함
+      Serial.println(key2);
+    }
+    if (key2=='/'){
       sign='/';
       break;
     }
-    else if (key=='*'){ 
+    else if (key2=='*'){ 
       sign='*';
       break;
     }
-    else if (key=='-'){
+    else if (key2=='-'){
       sign='-';
       break;
     }
-    else if (key=='+'){ 
+    else if (key2=='+'){ 
       sign='+';
       break;
     }
+    else if (key2=='='){ 
+      break;
+    }
+    
   }
   return secondResult;
 }
@@ -87,15 +108,19 @@ void calculate(){
   switch(sign){
      case '+' :
        result = firstResult + secondResult;
+       Serial.println(result);
        break;
      case '-' :
        result = firstResult - secondResult;
+       Serial.println(result);
        break;
      case '*' :
        result = firstResult * secondResult;
+       Serial.println(result);
        break;
      case '/' :
        result = firstResult / secondResult;
+       Serial.println(result);
        break;
     }
 }
@@ -104,26 +129,36 @@ void calculateSign(){
     key = keypad.getKey();
     case '+':
       sign='+';
+      Serial.println("calculateSign+");
       break;
     case '-':
       sign='-';
+      Serial.println("calculateSign-");
       break;
     case '*':
       sign='*';
+      Serial.println("calculateSign*");
       break;
     case '/':
       sign='/';
+      Serial.println("calculateSign/");
       break;  
     }
 }
+
+
+  
+
 
 void setup(){ 
   Serial.begin(9600); 
   for (int i=0;i<segmentLEDsNum;i++){
     pinMode(segmentLEDs[i],OUTPUT);
   }
-  
+  digitalWrite(resetPin, HIGH);
+  pinMode(resetPin, OUTPUT);
 } 
+
    
 void loop(){
   key = keypad.getKey();
@@ -133,8 +168,11 @@ void loop(){
   calculate();
 
   if(key == '='){
-    
+    Serial.println("=");
+    Serial.println(result);  
   }
+  
+  
 }
 
   
